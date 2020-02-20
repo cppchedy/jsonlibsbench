@@ -10,6 +10,8 @@ add_definitions(-DSIMDJSON_BUILD_STATIC=ON)
 
 add_compile_options(-O2)
 
+add_subdirectory(thirdparty/benchmark)
+
 add_subdirectory(thirdparty/json)
 set(RAPIDJSON_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/rapidjson/include)
 set(SAJSON_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/sajson/include)
