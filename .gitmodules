@@ -1,0 +1,20 @@
+[submodule "thirdparty/sajson"]
+	path = thirdparty/sajson
+	url = https://github.com/chadaustin/sajson
+	branch = master
+[submodule "thirdparty/rapidjson"]
+	path = thirdparty/rapidjson
+	url = https://github.com/Tencent/rapidjson/
+	branch = master
+[submodule "thirdparty/json"]
+	path = thirdparty/json
+	url = https://github.com/nlohmann/json
+	branch = master
+[submodule "thirdparty/gason"]
+	path = thirdparty/gason
+	url = https://github.com/cppchedy/gason
+	branch = master
+[submodule "thirdparty/simdjson"]
+	path = thirdparty/simdjson
+	url = https://github.com/cppchedy/simdjson
+	branch = master
