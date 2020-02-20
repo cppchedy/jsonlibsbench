@@ -18,3 +18,7 @@
 	path = thirdparty/simdjson
 	url = https://github.com/cppchedy/simdjson
 	branch = master
+[submodule "thirdparty/benchmark"]
+	path = thirdparty/benchmark
+	url = https://github.com/google/benchmark
+	branch = master
