@@ -1,8 +1,10 @@
 #include <experimental/filesystem>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 #include <utility>
 #include <iostream>
+#include <fstream>
 
 namespace fs = std::experimental::filesystem;
 
@@ -257,6 +259,42 @@ bench_result_t sajsonParseSngAllocMutBuff(const char *filename, const char* benc
     };
 }
 
+void dump_to_json(const std::vector<bench_result_t>& in, const char* file_name){
+    auto bench_to_json = [](const bench_result_t& b) -> std::string {
+        return "{\n \"throughput\" :" + std::to_string(b.throughput) + "," +
+                    "\"latency\" : " + std::to_string(b.lat) + "," +
+                    "\"filename\" : \"" + b.file_name + "\"," +
+                    "\"benchname\" : \"" + b.bench_name + "\""
+        "\n}";
+    };
+
+    std::vector<std::string> bench_jsonified;
+    bench_jsonified.reserve(in.size());
+
+
+    std::transform(std::begin(in), std::end(in), std::back_inserter(bench_jsonified), 
+        [&bench_to_json](const auto& e){
+            return bench_to_json(e);
+        });
+
+    using namespace std::string_literals;
+    std::string js_res = 
+        std::accumulate(std::begin(bench_jsonified), std::end(bench_jsonified)-1, "["s, 
+            [](std::string acc, std::string str){
+                return acc  + str + ", ";
+        }) + *(std::end(bench_jsonified)-1) + "]";
+
+    std::ofstream out;
+    out.open(file_name);
+    if(!out){
+        puts("problem opening file");
+        return ;
+    }
+
+    out << js_res;
+    out.close();
+}
+
 int main(int argc, char* argv[]) {
     std::vector<std::pair<const char *, FN_TYPE>> strategies;
     strategies.reserve(16);
@@ -284,10 +322,11 @@ int main(int argc, char* argv[]) {
             });
         }
     }
-
+/*
     std::for_each(std::begin(results), std::end(results), [](auto &elm) {
         std::cout << elm;
     });
-
+*/
+    dump_to_json(results, "out.json");
     return 0;
 }
