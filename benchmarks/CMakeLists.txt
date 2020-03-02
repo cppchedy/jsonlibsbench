@@ -1,7 +1,7 @@
-add_executable(json_parser json_parser.cc memorystat.cpp)
+add_executable(json_parser json_parser.cc)
 target_link_libraries(json_parser PRIVATE nlohmann_json::nlohmann_json
-    gasonmem
-    simdjsonmemory
+    gason
+    simdjson
     PRIVATE nlohmann_json::nlohmann_json
 )
 
@@ -11,7 +11,17 @@ target_link_libraries(json_parser_bench PRIVATE nlohmann_json::nlohmann_json
     simdjson
 )
 
+
+add_executable(json_parser_th json_parser_th.cc)
+target_link_libraries(json_parser_th simdjson stdc++fs)
+
+add_executable(memory_bench memory_bench.cc)
+target_link_libraries(memory_bench simdjson )
+
 add_compile_options(-pthread)
+add_executable(all_in_one single_gbench.cc)
+target_link_libraries(all_in_one benchmark::benchmark gason simdjson  nlohmann_json::nlohmann_json)
+
 add_executable(gason_bench gason_bench.cc)
 target_link_libraries(gason_bench benchmark::benchmark gason simdjson)
 

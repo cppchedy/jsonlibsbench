@@ -1,0 +1,293 @@
+#include <experimental/filesystem>
+#include <vector>
+#include <algorithm>
+#include <utility>
+#include <iostream>
+
+namespace fs = std::experimental::filesystem;
+
+#include <simdjson/jsonparser.h>
+#include <simdjson/jsonstream.h>
+#include <rapidjson/document.h>
+#include <sajson.h>
+
+
+using namespace simdjson;
+
+struct bench_result_t {
+    double lat;
+    double throughput;
+    bool valid_json;
+    const char *bench_name;
+    std::string file_name;
+};
+
+std::ostream& operator<<(std::ostream& out, const bench_result_t& b_res) {
+  out << b_res.bench_name << " " << b_res.file_name << "\tLatency: " << b_res.lat <<"\tthrouput: " << b_res.throughput << '\n';
+  return out;
+}
+
+using FN_TYPE = bench_result_t (*)(const char*, const char*);
+
+std::pair<char *, size_t> open_file(const char *file_name){
+    FILE *file = fopen(file_name, "rb");
+    if (!file){
+        fprintf(stderr, "Failed to open file\n");
+        return {};
+    }
+    fseek(file, 0, SEEK_END);
+    size_t length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *buffer = new char[length];
+
+    if (length != fread(buffer, 1, length, file)){
+        fprintf(stderr, "Failed to read entire file\n");
+        return {};
+    }
+    fclose(file);
+    return {buffer, length};
+}
+
+bench_result_t simdjsonMBWRParse(const char* filename, const char* benchname){
+    auto [buffer, length] = open_file(filename);
+
+    auto start = std::chrono::steady_clock::now();
+    ParsedJson pj = build_parsed_json(buffer, length, false);
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> secs = end - start;
+    double speedinGBs = (length) / (secs.count() * 1000000000.0);
+
+    bool valid = pj.is_valid();
+
+    delete[] buffer;
+
+    return bench_result_t{
+      secs.count(),
+      speedinGBs,
+      valid,
+      benchname,
+      filename
+    };
+}
+
+bench_result_t simdjsonMBRParse(const char* filename, const char* benchname){
+    auto [buffer, length] = open_file(filename);
+
+    auto start = std::chrono::steady_clock::now();
+    ParsedJson pj = build_parsed_json(buffer, length);
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> secs = end - start;
+    double speedinGBs = (length) / (secs.count() * 1000000000.0);
+
+    bool valid = pj.is_valid();
+
+    delete[] buffer;
+
+    return bench_result_t{
+      secs.count(),
+      speedinGBs,
+      valid,
+      benchname,
+      filename
+    };
+}
+
+bench_result_t simdjsonPStrParse(const char *filename, const char* benchname) {
+    padded_string p = get_corpus(filename);
+    auto length = p.size();
+
+    auto start = std::chrono::steady_clock::now();
+    ParsedJson pj = simdjson::build_parsed_json(p);
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> secs = end - start;
+    double speedinGBs = (length) / (secs.count() * 1000000000.0);
+
+    bool valid = pj.is_valid();
+
+    return bench_result_t{
+      secs.count(),
+      speedinGBs,
+      valid,
+      benchname,
+      filename
+    };
+}
+
+//Rapidjson
+
+bench_result_t rapidjsonParseInsitu(const char *filename, const char* benchname) {
+    auto [buffer, length] = open_file(filename);
+
+    auto start = std::chrono::steady_clock::now();
+    rapidjson::Document d;
+    d.ParseInsitu(buffer);
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> secs = end - start;
+    double speedinGBs = (length) / (secs.count() * 1000000000.0);
+
+    bool valid = d.HasParseError();
+
+    delete[] buffer;
+
+    return bench_result_t{
+      secs.count(),
+      speedinGBs,
+      valid,
+      benchname,
+      filename
+    };
+}
+
+bench_result_t rapidjsonParse(const char *filename, const char* benchname) {
+    auto [buffer, length] = open_file(filename);
+
+    auto start = std::chrono::steady_clock::now();
+    rapidjson::Document d;
+    d.Parse(buffer);
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> secs = end - start;
+    double speedinGBs = (length) / (secs.count() * 1000000000.0);
+
+    bool valid = d.HasParseError();
+
+    delete[] buffer;
+
+    return bench_result_t{
+      secs.count(),
+      speedinGBs,
+      valid,
+      benchname,
+      filename
+    };
+}
+
+//Sajson
+
+bench_result_t sajsonParseDynAlloc(const char *filename, const char* benchname) {
+    auto [buffer, length] = open_file(filename);
+    auto start = std::chrono::steady_clock::now();
+    const sajson::document document = sajson::parse(sajson::dynamic_allocation(), sajson::string(buffer, length));
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> secs = end - start;
+    double speedinGBs = (length) / (secs.count() * 1000000000.0);
+
+    bool valid = document.is_valid();
+
+    delete[] buffer;
+
+    return bench_result_t{
+      secs.count(),
+      speedinGBs,
+      valid,
+      benchname,
+      filename
+    };
+}
+
+bench_result_t sajsonParseSngAlloc(const char *filename, const char* benchname) {
+    auto [buffer, length] = open_file(filename);
+    auto start = std::chrono::steady_clock::now();
+    const sajson::document document = sajson::parse(sajson::single_allocation(), sajson::string(buffer, length));
+     auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> secs = end - start;
+    double speedinGBs = (length) / (secs.count() * 1000000000.0);
+
+    bool valid = document.is_valid();
+
+    delete[] buffer;
+
+    return bench_result_t{
+      secs.count(),
+      speedinGBs,
+      valid,
+      benchname,
+      filename
+    };
+}
+
+bench_result_t sajsonParseDynAllocMutBuff(const char *filename, const char* benchname) {
+    auto [buffer, length] = open_file(filename);
+    auto start = std::chrono::steady_clock::now();
+    const sajson::document document = sajson::parse(sajson::dynamic_allocation(), sajson::mutable_string_view(length, buffer));
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> secs = end - start;
+    double speedinGBs = (length) / (secs.count() * 1000000000.0);
+
+    bool valid = document.is_valid();
+
+    delete[] buffer;
+
+    return bench_result_t{
+      secs.count(),
+      speedinGBs,
+      valid,
+      benchname,
+      filename
+    };
+}
+
+bench_result_t sajsonParseSngAllocMutBuff(const char *filename, const char* benchname) {
+    auto [buffer, length] = open_file(filename);
+    auto start = std::chrono::steady_clock::now();
+    const sajson::document document = sajson::parse(sajson::single_allocation(), sajson::mutable_string_view(length, buffer));
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> secs = end - start;
+    double speedinGBs = (length) / (secs.count() * 1000000000.0);
+
+    bool valid = document.is_valid();
+
+    delete[] buffer;
+
+    return bench_result_t{
+      secs.count(),
+      speedinGBs,
+      valid,
+      benchname,
+      filename
+    };
+}
+
+int main(int argc, char* argv[]) {
+    std::vector<std::pair<const char *, FN_TYPE>> strategies;
+    strategies.reserve(16);
+
+    strategies.emplace_back("simdjsonMBWRParse", simdjsonMBWRParse);
+    strategies.emplace_back("simdjsonMBRParse", simdjsonMBRParse);
+    strategies.emplace_back("simdjsonPStrParse", simdjsonPStrParse);
+
+    strategies.emplace_back("rapidjsonParseInsitu", rapidjsonParseInsitu);
+    strategies.emplace_back("rapidjsonParse", rapidjsonParse);
+
+    strategies.emplace_back("sajsonParseDynAlloc", sajsonParseDynAlloc);
+    strategies.emplace_back("sajsonParseSngAlloc", sajsonParseSngAlloc);
+    strategies.emplace_back("sajsonParseDynAllocMutBuff", sajsonParseDynAllocMutBuff);
+    strategies.emplace_back("sajsonParseSngAllocMutBuff", sajsonParseSngAllocMutBuff);
+
+    std::vector<bench_result_t> results;
+    results.reserve(strategies.size());
+
+    for(auto &entry : fs::directory_iterator(argv[1])){        
+        if( entry.path().extension() == std::string{".json"}){
+            std::for_each(std::begin(strategies), std::end(strategies), 
+            [&results, &entry](auto& bench){
+                results.push_back(bench.second(entry.path().c_str(), bench.first));
+            });
+        }
+    }
+
+    std::for_each(std::begin(results), std::end(results), [](auto &elm) {
+        std::cout << elm;
+    });
+
+    return 0;
+}
