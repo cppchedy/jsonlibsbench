@@ -37,6 +37,50 @@ std::map<int, std::string> files_marine {
     { 8192, "data_marine/marine_ik_8M.json"}
 };
 
+std::pair<char *, size_t> open_file(const char *file_name){
+    FILE *file = fopen(file_name, "rb");
+    if (!file){
+        fprintf(stderr, "Failed to open file\n");
+        return {};
+    }
+    fseek(file, 0, SEEK_END);
+    size_t length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *buffer = new char[length];
+
+    if (length != fread(buffer, 1, length, file)){
+        fprintf(stderr, "Failed to read entire file\n");
+        return {};
+    }
+    fclose(file);
+    return {buffer, length};
+}
+
+static void BM_SIMDJsonParseRawBufRealloDis(benchmark::State &state){
+    auto [buffer, length] = open_file(files_github[state.range(0)].c_str());
+    ParsedJson pj;
+    for (auto _ : state){
+        pj = build_parsed_json(buffer, length, false);
+        benchmark::DoNotOptimize(pj);
+    }
+    delete[] buffer;
+}
+
+BENCHMARK(BM_SIMDJsonParseRawBufRealloDis)->RangeMultiplier(2)->Range(4, 8192);
+
+static void BM_SIMDJsonParseWithoutPaddedString(benchmark::State &state){
+    auto [buffer, length] = open_file(files_github[state.range(0)].c_str());
+    ParsedJson pj;
+    for (auto _ : state){
+        pj = build_parsed_json(buffer, length);
+        benchmark::DoNotOptimize(pj);
+    }
+    delete[] buffer;
+}
+
+BENCHMARK(BM_SIMDJsonParseWithoutPaddedString)->RangeMultiplier(2)->Range(4, 8192);
+
 static void BM_SIMDJsonParse(benchmark::State &state){
     padded_string p = get_corpus(files_github[state.range(0)]);
     ParsedJson pj;
