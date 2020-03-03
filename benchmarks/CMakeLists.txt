@@ -19,7 +19,7 @@ add_executable(memory_bench memory_bench.cc)
 target_link_libraries(memory_bench simdjson )
 
 add_compile_options(-pthread)
-add_executable(all_in_one single_gbench.cc)
+add_executable(all_in_one single_gbench.cc utility.cc)
 target_link_libraries(all_in_one benchmark::benchmark gason simdjson  nlohmann_json::nlohmann_json)
 
 add_executable(gason_bench gason_bench.cc)
