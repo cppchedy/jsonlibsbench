@@ -1,3 +1,6 @@
 build
 .vscode
-data
+data/big-file.json
+data/heap*
+data/*.json
+data/*.csv
