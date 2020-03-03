@@ -13,6 +13,8 @@ namespace fs = std::experimental::filesystem;
 #include <rapidjson/document.h>
 #include <sajson.h>
 
+#include "utility.h"
+
 
 using namespace simdjson;
 
@@ -30,26 +32,6 @@ std::ostream& operator<<(std::ostream& out, const bench_result_t& b_res) {
 }
 
 using FN_TYPE = bench_result_t (*)(const char*, const char*);
-
-std::pair<char *, size_t> open_file(const char *file_name){
-    FILE *file = fopen(file_name, "rb");
-    if (!file){
-        fprintf(stderr, "Failed to open file\n");
-        return {};
-    }
-    fseek(file, 0, SEEK_END);
-    size_t length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char *buffer = new char[length];
-
-    if (length != fread(buffer, 1, length, file)){
-        fprintf(stderr, "Failed to read entire file\n");
-        return {};
-    }
-    fclose(file);
-    return {buffer, length};
-}
 
 bench_result_t simdjsonMBWRParse(const char* filename, const char* benchname){
     auto [buffer, length] = open_file(filename);
@@ -322,11 +304,11 @@ int main(int argc, char* argv[]) {
             });
         }
     }
-/*
+
     std::for_each(std::begin(results), std::end(results), [](auto &elm) {
         std::cout << elm;
     });
-*/
+
     dump_to_json(results, "out.json");
     return 0;
 }
