@@ -79,6 +79,10 @@ public:
         stat_->currentSize -= size;
         stat_->freeCount++;
     }
+
+    void Reset() {
+        std::memset(&global_, 0, sizeof(global_));
+    }
 private:
     size_t GetMallocSize(void* ptr) {
 #if defined(_MSC_VER)
