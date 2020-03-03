@@ -7,6 +7,8 @@
 #include <utility>
 #include <map>
 
+#include "utility.h"
+
 std::map<int, std::string> files_github {
     { 4, "data_github/github_events_4K.json" },
     { 8, "data_github/github_events_8K.json"},
@@ -36,26 +38,6 @@ std::map<int, std::string> files_marine {
     { 4096, "data_marine/marine_ik_4M.json"},
     { 8192, "data_marine/marine_ik_8M.json"}
 };
-
-std::pair<char *, size_t> open_file(const char *file_name){
-    FILE *file = fopen(file_name, "rb");
-    if (!file){
-        fprintf(stderr, "Failed to open file\n");
-        return {};
-    }
-    fseek(file, 0, SEEK_END);
-    size_t length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char *buffer = new char[length];
-
-    if (length != fread(buffer, 1, length, file)){
-        fprintf(stderr, "Failed to read entire file\n");
-        return {};
-    }
-    fclose(file);
-    return {buffer, length};
-}
 
 static void BM_SajsonParseDynAlloc(benchmark::State &state){
     auto [buffer, length] = open_file(files_github[state.range(0)].c_str());
