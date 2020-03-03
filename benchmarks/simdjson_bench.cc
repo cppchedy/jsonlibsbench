@@ -5,6 +5,8 @@
 #include <simdjson/jsonstream.h>
 
 
+#include "utility.h"
+
 using namespace simdjson;
 
 std::map<int, std::string> files_github {
@@ -37,25 +39,6 @@ std::map<int, std::string> files_marine {
     { 8192, "data_marine/marine_ik_8M.json"}
 };
 
-std::pair<char *, size_t> open_file(const char *file_name){
-    FILE *file = fopen(file_name, "rb");
-    if (!file){
-        fprintf(stderr, "Failed to open file\n");
-        return {};
-    }
-    fseek(file, 0, SEEK_END);
-    size_t length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char *buffer = new char[length];
-
-    if (length != fread(buffer, 1, length, file)){
-        fprintf(stderr, "Failed to read entire file\n");
-        return {};
-    }
-    fclose(file);
-    return {buffer, length};
-}
 
 static void BM_SIMDJsonParseRawBufRealloDis(benchmark::State &state){
     auto [buffer, length] = open_file(files_github[state.range(0)].c_str());

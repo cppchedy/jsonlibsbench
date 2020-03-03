@@ -25,7 +25,7 @@ target_link_libraries(all_in_one benchmark::benchmark gason simdjson  nlohmann_j
 add_executable(gason_bench gason_bench.cc)
 target_link_libraries(gason_bench benchmark::benchmark gason simdjson)
 
-add_executable(simdjson_bench simdjson_bench.cc)
+add_executable(simdjson_bench simdjson_bench.cc utility.cc)
 target_link_libraries(simdjson_bench benchmark::benchmark simdjson)
 
 add_executable(nlohmann_bench nlohmann_bench.cc)
