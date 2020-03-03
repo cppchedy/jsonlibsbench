@@ -15,8 +15,8 @@ target_link_libraries(json_parser_bench PRIVATE nlohmann_json::nlohmann_json
 add_executable(json_parser_th json_parser_th.cc utility.cc)
 target_link_libraries(json_parser_th simdjson stdc++fs)
 
-add_executable(memory_bench memory_bench.cc)
-target_link_libraries(memory_bench simdjson )
+add_executable(memory_bench_heaptrack memory_bench.cc utility.cc)
+target_link_libraries(memory_bench_heaptrack simdjson )
 
 add_compile_options(-pthread)
 add_executable(all_in_one single_gbench.cc utility.cc)
