@@ -7,7 +7,7 @@ bash "${root_dir}"/tools/build.sh
 cd "${root_dir}"/build/benchmarks
 
 echo "starting latency benchmark..."
-#./all_in_one
+./all_in_one
 echo "Latency benchmark done"
 
 echo " "
