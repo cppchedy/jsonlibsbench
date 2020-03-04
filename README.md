@@ -21,3 +21,7 @@ To Run the all_in_one latency benchmark:
 cd data
 ../build/benchmarks/all_in_one
 ```
+
+## single step
+
+you can just run `tools/benchmark-runner.sh`. This script builds and runs the benchmarks.
