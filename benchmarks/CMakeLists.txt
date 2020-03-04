@@ -40,3 +40,4 @@ target_link_libraries(rapidjson_bench benchmark::benchmark)
 add_executable(sajson_bench sajson_bench.cc utility.cc)
 target_link_libraries(sajson_bench benchmark::benchmark )
 
+add_test(NAME all_in_one_bench COMMAND all_in_one)

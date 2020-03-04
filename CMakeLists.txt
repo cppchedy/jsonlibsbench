@@ -24,4 +24,7 @@ include_directories(
     ${GASON_INCLUDE_DIR}
 )
 
+enable_testing()
 add_subdirectory(benchmarks)
+file(COPY data/data_github DESTINATION ${CMAKE_BINARY_DIR}/benchmarks)
+file(COPY data/data_marine DESTINATION ${CMAKE_BINARY_DIR}/benchmarks)
