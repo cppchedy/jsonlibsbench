@@ -55,33 +55,11 @@ void dump_stats_to(const std::vector<std::string> &stats, const char* file_name)
     out.close();
 }
 
-int main(int argc, char *argv[]) {
-    std::vector<std::pair<const char *, FN_TYPE>> strategies;
-    strategies.reserve(16);
-
-    strategies.emplace_back("simdjsonMBWRParse", simdjsonMBWRParse);
-    strategies.emplace_back("simdjsonMBRParse", simdjsonMBRParse);
-    strategies.emplace_back("simdjsonPStrParse", simdjsonPStrParse);
-
-    strategies.emplace_back("rapidjsonParseInsitu", rapidjsonParseInsitu);
-    strategies.emplace_back("rapidjsonParse", rapidjsonParse);
-
-    strategies.emplace_back("sajsonParseDynAlloc", sajsonParseDynAlloc);
-    strategies.emplace_back("sajsonParseSngAlloc", sajsonParseSngAlloc);
-    strategies.emplace_back("sajsonParseDynAllocMutBuff", sajsonParseDynAllocMutBuff);
-    strategies.emplace_back("sajsonParseSngAllocMutBuff", sajsonParseSngAllocMutBuff);
-
-    strategies.emplace_back("nlohmannParse", nlohmannParse);
-
-    //TODOs:
-    // validate arguments
-    // set default path if none is provided
-    // handle file argument (not only dirs)
-
+int bench_dir_case(const std::vector<std::pair<const char *, FN_TYPE>> &strategies, const std::string &dir){
     std::vector<std::string> memstats;
     memstats.reserve(16);
 
-    for(const auto& entry : fs::directory_iterator(argv[1])) {
+    for(const auto& entry : fs::directory_iterator(dir)) {
         auto size = fs::file_size(entry.path());
         if(entry.path().extension() == std::string{".json"}){
             for(const auto& elm : strategies){
@@ -104,6 +82,74 @@ int main(int argc, char *argv[]) {
     }
 
     dump_stats_to(memstats, "memstat.json");
+    return 0;
+}
+
+int bench_file_case(const std::vector<std::pair<const char *, FN_TYPE>> &strategies, const std::string &file){
+    auto fl = fs::path{file};
+    auto size = fs::file_size(fl);
+
+    std::vector<std::string> memstats;
+    memstats.reserve(16);
+
+    if (fl.extension() == std::string{".json"}){
+        for (const auto &elm : strategies){
+            Memory::Instance().Reset();
+            elm.second(fl.c_str());
+            auto stat = PrintMemoryStat();
+            auto json = memstat_to_json(
+                stat,
+                file,
+                size,
+                elm.first
+            );
+            puts(elm.first);
+            puts(fl.c_str());
+            puts("\n");
+            memstats.push_back(json);
+        }
+        dump_stats_to(memstats, "memstat.json");
+        return 0;
+    }
+    puts("file name is required to end with .json");
+    return -1;
+}
+
+int main(int argc, char *argv[]) {
+    if(argv[1] == nullptr){
+        puts("no path have been provided.");
+        return -1;
+    }
+    std::string dir_or_file{argv[1]};
+
+    std::vector<std::pair<const char *, FN_TYPE>> strategies;
+    strategies.reserve(16);
+
+    strategies.emplace_back("simdjsonMBWRParse", simdjsonMBWRParse);
+    strategies.emplace_back("simdjsonMBRParse", simdjsonMBRParse);
+    strategies.emplace_back("simdjsonPStrParse", simdjsonPStrParse);
+
+    strategies.emplace_back("rapidjsonParseInsitu", rapidjsonParseInsitu);
+    strategies.emplace_back("rapidjsonParse", rapidjsonParse);
+
+    strategies.emplace_back("sajsonParseDynAlloc", sajsonParseDynAlloc);
+    strategies.emplace_back("sajsonParseSngAlloc", sajsonParseSngAlloc);
+    strategies.emplace_back("sajsonParseDynAllocMutBuff", sajsonParseDynAllocMutBuff);
+    strategies.emplace_back("sajsonParseSngAllocMutBuff", sajsonParseSngAllocMutBuff);
+
+    strategies.emplace_back("nlohmannParse", nlohmannParse);
+
+    fs::path arg{argv[1]} ; 
+    if(fs::is_directory(arg))
+        return bench_dir_case(strategies, dir_or_file);
+    if(fs::is_regular_file(arg))
+        return bench_file_case(strategies, dir_or_file);
+    puts("invalid argument");
+    return -1;
+
+    //TODOs:
+    // set default path if none is provided
+
 
     return 0;
 }
