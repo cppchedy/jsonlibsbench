@@ -78,3 +78,12 @@ bool sajsonParseSngAllocMutBuff(const char *filename) {
     delete[] buffer;
     return document.is_valid();
 }
+
+//nlohmann
+
+bool nlohmannParse(const char* filename){
+    auto [buffer, length] = open_file(filename);
+    auto j = json::parse(buffer, nullptr, false);
+    delete[] buffer;
+    return j.is_discarded();
+}

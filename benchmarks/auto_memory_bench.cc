@@ -71,6 +71,8 @@ int main(int argc, char *argv[]) {
     strategies.emplace_back("sajsonParseDynAllocMutBuff", sajsonParseDynAllocMutBuff);
     strategies.emplace_back("sajsonParseSngAllocMutBuff", sajsonParseSngAllocMutBuff);
 
+    strategies.emplace_back("nlohmannParse", nlohmannParse);
+
     //TODOs:
     // validate arguments
     // set default path if none is provided
