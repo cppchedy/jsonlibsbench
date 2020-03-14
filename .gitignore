@@ -4,3 +4,6 @@ data/big-file.json
 data/heap*
 data/*.json
 data/*.csv
+tools/plotter/venv
+tools/plotter/speed.png
+tools/plotter/out.json
