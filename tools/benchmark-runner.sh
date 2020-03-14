@@ -6,8 +6,15 @@ bash "${root_dir}"/tools/build.sh
 
 cd "${root_dir}"/build/benchmarks
 
+USE_NUMACTL=
+if [[ $1 -eq "--use-numa" ]]; then
+USE_NUMACTL="numactl --physcpubind=0 --localalloc"
+echo "using numactl for the latency bench"
+echo " "
+fi
+
 echo "starting latency benchmark..."
-./all_in_one
+${USE_NUMACTL} ./all_in_one || ./all_in_one
 echo "Latency benchmark done"
 
 echo " "
