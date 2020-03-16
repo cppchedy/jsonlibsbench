@@ -15,7 +15,8 @@ fi
 case $OS in
 Fedora)
     echo "Operating System is Fedora with version $VERSION_ID"
-    PCK_MNG="dnf install"
+    PCK_MNG="dnf"
+    sudo dnf groupinstall "Development Tools"
     ;;
 Ubuntu)
     echo "Operating System is Ubuntu with version $VERSION_ID"
@@ -26,4 +27,5 @@ Ubuntu)
     ;;
 esac
 
-sudo $PCK_MNG -y numactl hwloc
+
+sudo $PCK_MNG install -y numactl hwloc cmake
